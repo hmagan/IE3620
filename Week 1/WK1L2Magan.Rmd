@@ -1,0 +1,89 @@
+---
+title: "Cat Anatomy Report"
+author: "Hank Magan"
+date: '`r format(Sys.time(), "%B %d, %Y")`'
+output: html_document
+abstract: "This document provides a report on data related to cat anatomy, specifically heart weight in grams, body weight in kilograms, and gender"
+---
+
+## Model Setup
+##### In this section, we established the basic parameters of the model, including cleaning up old data, setting up the working directory, and loading a separate file of useful functions. 
+
+```{r model setup}
+rm(list=ls())
+setwd("C:/Users/hank/Documents/GitHub/IE3620/Week 1")
+source("../myfunctions.R")
+```
+
+## Loading Libraries
+##### For this study, we are using the MASS package (Modern Applied Statistics with S, from Venables and Ripley). In this package, there are a number of datasets ready for analysis, including the cats dataset.
+
+```{r MASS library}
+# load data from the MASS library
+library(MASS)
+```
+```{r MASS warning}
+## Warning: package 'MASS' was built under R version 3.5.2
+```
+
+## Data Demographics
+##### In this section, we look at the basic structure of the data: the head of the data file, which shows the names of the columns and a representative sample of the first several rows of data; the dimension of the data (number of rows and columns); and a descriptive statistical summary of the dataset.
+
+```{r cats import}
+head(cats)
+```
+```{r cats dim}
+dim(cats)
+```
+```{r cats summary}
+summary(cats)
+```
+
+### Nicer looking summary table
+##### We can use tools such as knitr/kable to display data tables in a nicer looking format. In this section, we are displaying the summary descriptive statistics table using these tools. 
+
+```{r knitr table}
+knitr::kable(
+  summary(cats),
+  caption = "Table 1:  Summary table of cat anatomy data"
+)
+```
+
+## Data munging: rename columns, data in columns
+##### “Data munging” is a computer science term that basically means cleaning up the data, usually in fairly destructive ways (not always a bad thing). In this section, we are changing the existing column names (sex, bwt,hwt) to something more readable: Gender, BodyWeight and HeartWeight. Having longer column names has its problems(more typing), but does make your dataset more human-friendly! Likewise, we are changing gender from F/M to Female/Male.
+
+```{r column renaming}
+colnames(cats) <- c("Gender", "BodyWeight", "HeartWeight")
+names(cats)
+```
+```{r gender renaming}
+cats$Gender <- factor(cats$Gender, levels = c("F", "M"), labels = c("Female", "Male"))
+head(cats)
+```
+
+## Graphical Representations
+##### In exploratory data analysis (EDA), it is useful to create basic plots and graphs to get a sense of the behavior of the data. In this section, we create three types of plots: histograms, pairwise correlation plots, and a simple scatter plot, fitted with a regression line.
+### Histograms
+##### It is oftentimes useful to see histograms of the numerical data, in this case the two weights. It should be noticed that the data does not follow a normal distribution.
+```{r bodyweight histogram}
+hist(cats$BodyWeight, main="Histogram of Body weight (kg)")
+```
+```{r heart weight histogram}
+hist(cats$HeartWeight, main="Histogram of Heart weight (g)")
+```
+
+##### Pairwise plot of relevant data
+##### We now use one of the builtin functions from myfunctions.R to create a pairwise plot. This shows histograms of all of the data, a scatter plot of each pair of data, and a correlation coefficient between each pair.
+
+```{r pairwise plot}
+pairs(cats,upper.panel=panel.cor,diag.panel=panel.hist)
+```
+
+### Plot of heart weight as a function of body weight (with linear regression line)
+##### Finally, we run a scatter plot of heart weight as a function of body weight. Notice that the data is fairly linear, supported by plotting a linear regression line on top of the raw data.
+
+```{r linear regression}
+plot(cats$HeartWeight~cats$BodyWeight, main="Simple plot of heart weight \n as a function of body weight", xlab="Body weight (kg)", ylab="Heart weight (g)")
+fit<- lm(cats$HeartWeight~cats$BodyWeight)
+abline(fit)
+```

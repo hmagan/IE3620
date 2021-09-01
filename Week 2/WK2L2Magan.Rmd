@@ -1,0 +1,125 @@
+---
+title: "Chicago Meteorological Data"
+author: "Hank Magan"
+date: "8/31/2021"
+abstract: "This document provides a preliminary analysis on data supplied by AlternativeAire, containing a variety of meteorological data from the city of Chicago every day from January 1987 to December 2005."
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# clean up old stuff and set working directory
+rm(list=ls())
+setwd("C:/Users/hank/Documents/GitHub/IE3620/Week 2")
+library(lubridate)
+source("../myfunctions.R")
+
+# import data set
+chicago <- read.csv("chicago.csv")
+```
+
+## Data Demographics
+
+Before manipulating the data, it is important to explore it to gain an understanding of the data demographics. To do this, we look at the basic structure of the data, the number of entries (rows) and columns, and a general, statistical summary. By doing this, we gain an understanding of the size of the data, as well as what it describes.
+
+```{r demographics}
+str(chicago)
+dim(chicago)
+summary(chicago)
+```
+
+## Data Cleanup
+
+Raw, untouched data containing discrepancies is not entirely useful to us. As such, we can go through certain procedures to both make the data more readable and to make statistical inferencing easier. 
+
+Some of the included data is irrelevant in our analysis (namely the index and city columns), so it may be removed. 
+
+```{r rm}
+chicago$indx <- NULL
+chicago$city <- NULL
+```
+
+This leaves us with the following: 
+
+```{r nam, echo=FALSE}
+names(chicago)
+```
+
+As you can see, some of the naming used in the data is either ambiguous and difficult to interpret or can be made more readable. To fix this, we can simply rename all the columns to the names seen below.  
+
+```{r renam}
+names(chicago) <- c("Temp", "Dewpoint", "Date", "PM25", "PM10", "O3", "NO3")
+```
+
+Additionally, we can use a function from the *lubridate* package to work with a standardized date format (YYYY-MM-DD).
+
+```{r date}
+chicago$Date <- mdy(chicago$Date)
+head(chicago)
+```
+
+Lastly, we want to normalize certain categories of data so that it is easily workable and interpretable. In order to do this, missing entries in the data must be rectified beforehand. One way to do this is to apply the mean of all data in the column to any empty spots. This technique was applied to the PM25 and PM10 columns, as shown below. 
+
+```{r na}
+PM25_mean <- mean(chicago$PM25, na.rm=TRUE)
+PM10_mean <- mean(chicago$PM10, na.rm=TRUE)
+chicago$PM25 <- ifelse(is.na(chicago$PM25), PM25_mean, chicago$PM25)
+chicago$PM10 <- ifelse(is.na(chicago$PM10), PM10_mean, chicago$PM10)
+```
+
+Now that there are no empty entries, the data can be properly normalized. 
+
+```{r norm}
+chicago$PM25 <- chicago$PM25 / max(chicago$PM25)
+chicago$PM10 <- chicago$PM10 / max(chicago$PM10)
+head(chicago)
+```
+
+As you can see, our remaining data is much cleaner than what we started with. Now that nomenclature has been clarified and data has been cleansed, statistical analysis may now take place. 
+
+## Data Visualization
+
+A variety of transformations and graphs may be observed to gain a better understanding of the data that was just cleansed. 
+
+```{r pairs}
+pairs(chicago,upper.panel=panel.cor,diag.panel=panel.hist)
+
+```
+
+Taking a closer look at some of the data can reveal a little more. For example consider the histogram of temperatures:
+
+```{r vis}
+hist(chicago$Temp, main="Chicago Temperatures, No Transformation", xlab="Temperature")
+
+```
+
+This can be transformed using a Rank Z transformation to attain a more normally distributed histogram, like so: 
+
+```{r norm hist}
+chicago$Temp <- rz.transform(chicago$Temp) # Rank Z transformation
+hist(chicago$Temp, main="Rank Z Transform. Of Chicago Temperatures", xlab="Temperature")
+```
+
+Here are some more examples of the same processing, both garnering similar results: 
+
+```{r tess}
+hist(chicago$Dewpoint, main="Chicago Dew Point", xlab="Dew Point")
+chicago$Dewpoint <- rz.transform(chicago$Dewpoint)
+hist(chicago$Dewpoint, main="Rank Z Transform. Of Chicago Dew Point", xlab="Dew Point")
+hist(chicago$O3, main="Chicago Ozone", xlab="Ozone")
+chicago$O3 <- rz.transform(chicago$O3)
+hist(chicago$O3, main="Rank Z Transform. Of Chicago Ozone", xlab="Ozone")
+```
+
+Additionally, correlations can be observed between points of data, such as the very strong positive correlation between temperature and dew point: 
+
+```{r corr}
+plot(chicago$Temp, chicago$Dewpoint, main="Temp vs. Dewpoint in Chicago", xlab="Temperature", ylab="Dew Point")
+fitline <- lm(chicago$Temp~chicago$Dewpoint) # linear reg. line
+abline(fitline)
+```
+
+The first several rows may be revisited to observe the effects of the transformations of the data itself, as shown below. 
+
+```{r rev, echo=FALSE}
+head(chicago)
+```

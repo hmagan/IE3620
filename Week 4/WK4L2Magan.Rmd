@@ -1,0 +1,135 @@
+---
+title: "Analysis of General Melting Point Prediction Data"
+author: "Hank Magan"
+date: "09/14/2021"
+abstract: "The following report analyzes data given from a paper titled *General Melting Point PRediction Based on a Diverse Compound Data Set and Artificial Neural Networks*, researched by M. Karthikeyan. The dataset contains mulitple properties of a variety of compounds, with an ultimate focus on melting point. The paper uses these properties (referred to as descriptors) to derive a general model for predicting melting point. As will be discussed in this report, these descriptors can be further explored for one's own purposes using a variety of statistical models, and can be compared against the predicted melting points as given by Karthikeyan."
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# clean up old stuff and set working directory
+rm(list=ls())
+setwd("C:/Users/hank/Documents/GitHub/IE3620/Week 4")
+
+# import libraries and dataset
+library(dplyr)
+library(vtable)
+mp <- read.csv("dirtyMPdata.csv", header=TRUE)
+```
+
+## Examining Basic Structure and Descriptive Statistics
+
+When presented with unseen data, it is wise to examine it before doing any modeling. This will provide a general overview of how the data is structured, the size of the dataset, descriptive statistics, and sample data from the first few and last few rows. This is an instrumental process in understanding exactly how data should be manipulated as it is explored further. 
+
+```{r examine}
+# check structure
+str(mp)
+# check descriptive stats
+summary(mp)
+# check first couple rows
+head(mp)
+# check last couple rows
+tail(mp)
+```
+
+This seemingly basic look at the data has proven to be useful. The variable names are now known, along with the type of data each column represents (i.e. does the column describe integers, characters, etc). Moreover, the analysis has revealed descriptive statistics of each variable, which allows for a clearer understanding of ballpark values and distributions for each variable. Interestingly, it has also revealed an odd formatting error in one variable name, something which should be kept in mind when cleaning the data. 
+
+## Data Cleaning
+
+Data cleaning is yet another vital process when seeking to create meaningful models out of data. Now that a basic understanding of the data's structure has been gained, this process can take place. The first thing that may be considered is the renaming of variables. As observed in the previous step, there was a formatting error in the "structure" column which needs to be rectified; however, apart from that, none of the other headers need to be changed. They are both descriptive enough and concise, and therefore will remain. 
+
+```{r rename}
+# rename just the first col to fix weird formatting
+names(mp)[names(mp) == "ï..structure"] <- "structure"
+names(mp)[1]
+```
+
+Another fundamental step in the process of data cleaning is handling missing data. To do this, observations containing data must first be identified. 
+
+```{r identify}
+# check for missing data
+clean <- ifelse(complete.cases(mp) == TRUE, 1, 0)
+paste("There are ", dim(mp)[1]-sum(clean), " rows with missing data.")
+```
+
+There appears to be thirteen rows with missing data. In the context of 4450 total observations, this accounts for very little data (0.29%), and therefore simply omitting rows with empty data—a process known as data munging—is not out of the question. Conversely, the thirteen rows can be kept, and empty values can be replaced with the average for the value's respective column. To make a more informed decision, the rows containing missing data can be looked at more closely to determine whether they are worthy to try keeping or not.  
+
+```{r look empty}
+# find rows containing NAs
+# take head for readability
+head(mp[rowSums(is.na(mp)) > 0, ])
+```
+
+Based on this output, it can be seen that only the energy column contains missing data. All of the other columns seem to have sensible values (concluded by comparing to descriptive statistics data), so keeping the other columns and simply replacing the NAs with averages is likely the best course of action. 
+
+```{r replace with mean}
+# replace NA values in the energy column with the mean
+avg_energy <- mean(mp$energy, na.rm=TRUE)
+mp$energy <- ifelse(is.na(mp$energy), avg_energy, mp$energy)
+```
+
+Now, armed with clean data, statistical modeling and analysis may commence. Understand that the steps previously outlined are practically mandatory for performing significant statistical modeling. 
+
+## Modeling the Data
+
+An important aspect of the dataset is that the compounds included reflect a very diverse selection within the field of chemistry, and are described by a variety of relevant properties, some of which can be observed below. The data can also be nicely visualized as a series of boxplots. 
+
+```{r table, echo=FALSE}
+mp_table <- mp %>% select(mp, molar.mass, heavy.atoms, logP, refractivity, dipole.moment)
+names(mp_table) <- c("melting point/°C", "molecular weight/g/mol", "number of heavy atoms", 
+                     "SlogP", "molar refractivity/cm^3", "dipole moment (AM1)/Debye")
+sumtable(mp_table, 
+         title="Characterization of the Dataset, Reflecting a Large Area of Relevant Chemical Space", 
+         summ = c('min(x)', 'max(x)', 'mean(x)', 'sd(x)', 'pctile(x)[25]', 'pctile(x)[75]'), 
+         summ.names = c('minimum', 'maximum', 'mean', 'standard deviation', 'Pctl. 25', 'Pctl. 75'))
+mp_table <- mp %>% select(mp, molar.mass, heavy.atoms, logP, refractivity, dipole.moment)
+par(mfrow=c(2, 3))
+boxplot(mp_table$mp, ylab="Melting Point (deg. Celcius)", main="Box Plot of Melting Point")
+boxplot(mp_table$molar.mass, ylab="Molecular Weight (g/mol)", main="Box Plot of Molecular Weight")
+boxplot(mp_table$heavy.atoms, ylab="Number of Heavy Atoms", main="Box Plot of Heavy Atom Count")
+boxplot(mp_table$logP, ylab="Hydrophobicity (logP)", main="Box Plot of SlogP")
+boxplot(mp_table$refractivity, ylab="Molar Refractivity (cm^3)", main="Box Plot of Molar Refractivity")
+boxplot(mp_table$dipole.moment, ylab="Dipole Moment (AM1/Debye)", main="Box Plot of Molecule Polarity")
+```
+
+Linear regression models are fantastic tools for analyzing the relationship between two variables. As such, linear regressions can be used to identify closeness between experimental melting point and predicted melting point data in this report. This experimental melting point can be found using a few different descriptors, namely formal charge, volume, and molar refractivity. The following plots visualize the relationship between these experimental melting points and predicted melting points. 
+
+```{r linear regs, echo=FALSE}
+par(mfrow=c(1,1))
+plot(mp$mp~mp$formal.charge, 
+     main="Predicted MP vs. Experimental MP (Using Formal Charge)", 
+     xlab="Experimental Melting Point (°C)", ylab="Predicted Melting Point (°C)")
+fitline <- lm(mp$mp~mp$formal.charge)
+abline(fitline)
+
+plot(mp$mp~mp$volume, 
+     main="Predicted MP vs. Experimental MP (Using Volume)", 
+     xlab="Experimental Melting Point (°C)", ylab="Predicted Melting Point (°C)")
+fitline <- lm(mp$mp~mp$volume)
+abline(fitline)
+
+plot(mp$mp~mp$refractivity, 
+     main="Predicted MP vs. Experimental MP (Using Molar Refractivity)", 
+     xlab="Experimental Melting Point (°C)", ylab="Predicted Melting Point (°C)")
+fitline <- lm(mp$mp~mp$refractivity)
+abline(fitline)
+```
+
+The formal charge graph is very odd-looking, largely due to the distinct columns formed as a result of having strictly integer data. With that said, the other two predictors nicely follow positive correlations with the predicted melting points. The linear regressions may be observed seperately as previously displayed, however they may also be combined into a model called a multiple linear regression. By doing so, the collective relationship to the predicted melting point can be demonstrated. While multiple regressions cannot be graphed (perhaps it could using only one additional variable), the significance can still be observed by looking at a summary of the regression. One thing to note is the P-value for each coefficient is quite low, indicating a low likelihood that the descriptors are insignificant statistically. 
+
+```{r multiple reg}
+mult_reg <- lm(mp$mp~mp$formal.charge+mp$volume+mp$refractivity)
+summary(mult_reg)
+```
+
+## BIC Analysis
+
+Yet another model that can be used to analyze the data is the BIC model. BIC models are used to determine causality between to variables, somewhat similar in purpose to linear regressions. In other words, BIC models measure the degree to which variable y happens as a result of variable x. When calculating BIC, the score between two variables is compared to the variable being CAUSED (y) to determine causality. If the difference between the two is ten or greater, causality is said to be likely. For example, observe the BIC score testing for whether molar refractivity causes melting point. 
+
+```{r BIC}
+mp_to_self <- BIC(lm(mp$mp~1)) # 49,674.4
+refrac_to_mp <- BIC(lm(mp$mp~mp$refractivity)) # 49,431.56
+paste("Difference of ", mp_to_self - refrac_to_mp)
+```
+
+Here, the scores decrease by approximately 242.84. This is much more than ten, and therefore we can conclude that molar refractivity causes melting point to a significant degree. It should be noted that this score must decrease, not increase, as it did in this example. 

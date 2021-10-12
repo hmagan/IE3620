@@ -46,8 +46,8 @@ violin <- ggplot(opiates, aes(x=population, y=deaths, group=abbr)) + geom_violin
           labs(title="Violin Plot of deaths vs. population") + xlab("Population (millions)") + 
           ylab("Deaths") + theme(plot.title=element_text(hjust=0.5)) + geom_boxplot()
 
-# stripchart of deaths vs population, colored by FIPS and shaped by region
-stripchart <- ggplot(opiates, aes(x=population, y=deaths, shape=region, color=fips)) + 
+# stripchart of deaths vs population (both adjusted), colored by FIPS and shaped by region
+stripchart <- ggplot(opiates, aes(x=adjusted, y=adjusted_se, shape=region, color=fips)) + 
               geom_jitter() + labs(title="Stripchart of deaths vs. population") + 
               xlab("Population (millions)") + ylab("Deaths") + theme(plot.title=element_text(hjust=0.5))
 

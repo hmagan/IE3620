@@ -1,0 +1,166 @@
+---
+title: "Ellerbee Water Quality"
+author: "Hank Magan"
+date: "9/27/2021"
+output: pdf_document
+---
+
+```{r, echo=FALSE}
+# clean up old stuff and set working directory
+rm(list=ls())
+setwd("~/GitHub/IE3620/Week 6")
+
+# import libraries and dataset
+library(ggplot2)
+library(gridExtra)
+ellerbee <- read.csv("ellerbee.csv", header=TRUE)
+# https://www.newsobserver.com/news/local/community/durham-news/article10057493.html
+# https://www.wqa.org/Portals/0/Technical/Technical%20Fact%20Sheets/2014_Ammonia.pdf
+# https://www.wqa.org/Portals/0/Technical/Technical%20Fact%20Sheets/2014_NitrateNitrite.pdf
+# https://www.usgs.gov/special-topic/water-science-school/science/dissolved-oxygen-and-water?qt-science_center_objects=0#qt-science_center_objects
+```
+
+## 1. Introduction
+
+Ellerbee Creek is a tributary of the Neuse River, located in the Piedmont of North Carolina. More specifically, the creek flows through Durham, right by the North Carolina School of Science and Mathematics. The Ellerbee Creek has notably been regarded as the most polluted creek in The Research Triangle region in North Carolina. A variety of data regarding the creek has been compiled into a small dataset, which can be used to examine how certain descriptors regarding the water health are related, as well as  why the creek is perceived to be "the most polluted creek in The Triangle" and one of the most polluted in North Carolina. This introduction will examine two measured, commonly found pollutants in detail. 
+
+Ammonia (NH~4~) is a colorless, pungent gas which happens to be greatly soluble in water. Due to the high solubility of ammonia, it is commonly found in bodies of water such as streams. The compound is found organically, however it is highly concentrated in the discharge a variety of industrial processes, such as fertilization. This discharge often naturally finds itself in bodies of water via runoff, and can also be found in groundwater through the process of infiltration. Luckily for humans, the concentration of ammonia that is present in drinking water has no effect, although the same story is untrue for aquatic life. Ammonia is toxic to fish, and this toxicity increases as both pH and water temperature increase. Due to this, its presence (in concentrated amounts) is linked with poor water quality. Its presence has been recorded in this Ellerbee Creek data and will be looked at in detail shortly. 
+
+Additionally, nitrate (NO~3~) has been identified to be a harmful molecule in water. Nitrate is a derivative of nitrogen, and therefore occurs organically. With that said, it is most concentrated (and therefore harmful) from man-made runoff, such as waste from human sewage and livestock manure. Additionally, nitrates are used widely in fertilizer, making it even more common as a pollutant. Since livestock is a principle cause of nitrate pollution, agricultural areas are especially vulnerable. When in drinking water, nitrate has to potential to adversely affect humans, which is why the US EDA (United States Environmental Protection Agency) has set the maximum contaminant level at 10mg/L. Perhaps even more worrying is the "algal bloom" caused by nitrate pollution. When nitrogen enters a body of water, it encourages plants to grow. When in high concentrations, algae will bloom at an alarming rate, thus covering the surface of the water in algae. This prevents sunlight from entering the plants in the water, which halts dissolved oxygen production, which kills fish and plants simultaneously. 
+
+## 2. Examine and Clean Data
+
+Having clean data is necessary for performing any form of meaningful data analysis. The term "data cleansing" describes a wide variety of particular processes, all of which work together to transform incomplete, inaccurate, or improperly formatted data into data that is fully complete, making the dataset significantly easier to work with. Essentially, data cleansing prepares data for proper analysis and examination. As such, it is necessary before performing any sort of work on a dataset. To determine if the Ellerbee Creek data is clean, one must examine the structure of the data, along with any other descriptive statistics. R has many commands which are useful for such a task, such as `str`, `summary`, `head`, and `tail`, as demonstrated in the code below. 
+
+```{r}
+# check descriptive statistics and basic structure
+str(ellerbee)
+summary(ellerbee)
+head(ellerbee)
+tail(ellerbee)
+```
+
+The first thing to notice is that the dataset is quite small, containing only twenty rows of eleven columns. Moreover, what each column represents can be observed. Each column, as well as its meaning, can be seen below: 
+
+1. WaterTemp: in degrees Celsius
+2. Pressure: in mmHG
+3. StrDepth: stream depth, in feet
+4. CFS: cubic flow/sec
+5. DO: dissolved oxygen, measured in mg/L
+6. pH: acidity
+7. NO3: nitrogen content
+8. Turb: turbidity, measured in Nephelometric Turbidity Units (NTU)
+9. Conduct: conductance
+10. NH4: ammonia content
+11. saturation
+
+Now that a basic understanding of the data has been reached, it is important to identify and resolve any missing data. This missing data shows up as `NA` in R, and should be replaced before performing analysis as to get accurate results. This process is demonstrated in the code below. 
+
+```{r}
+# check for missing data
+clean <- ifelse(complete.cases(ellerbee) == TRUE, 1, 0)
+missing_col <- colnames(ellerbee)[apply(ellerbee, 2, anyNA)]
+paste("There are ", dim(ellerbee)[1]-sum(clean), 
+      " rows with missing data across the following columns:")
+paste(missing_col)
+
+# replace NAs with zeroes
+ellerbee[is.na(ellerbee)] <- 0
+```
+
+Notice that `NA` values were replaced with zeroes. There are many methods of getting rid of `NA` values, such as replacing each with the average of its respective column. It seems that the columns with missing data are not particularly relevant, so replacing with zeroes should be appropriate. 
+
+## 3. Data Modeling
+
+Now that the data has been properly cleaned, analysis may commence. This analysis will be performed primarily via so-called scatter plots. These plots allow correlation to be observed between two variables, which will allow for conclusions to be drawn from the data. It should be noted that the dataset being worked on is very small, and as such significant, uncontested conclusions will not be able to be seen in this report—however, the data can still be examined and correlations may still be observed. 
+
+```{r, echo=FALSE}
+# ph, temp
+scatterplot <- ggplot(ellerbee, aes(x=pH, y=WaterTemp, color=WaterTemp)) + 
+               geom_jitter() + labs(title="1. Plot of Water Temperature vs. pH") + 
+               xlab("pH") + ylab("Water Temperature (Celcius)") + geom_smooth(method="lm", se=F) +                                  geom_vline(xintercept=7, color="#FF0000", linetype="dotdash")
+scatterplot
+```
+
+pH is the measure of how acidic or basic water is, and is a crucial indicator of water quality. With aquatic animals (and humans), a certain pH value must be maintained in homeostasis for life, meaning an imbalanced pH can be lethal. This would obviously harm the water quality, however it looks like the pH for Ellerbee Creek is within a reasonable range for life. In fact, many fish can tolerate quite a large pH range, usually hovering around neutral, or a pH level of 7 (marked on the graph by the dotted red line). Interestingly, as the water gets warmer, it also gets more basic (pH increases). Usually the relationship is the opposite. 
+
+```{r, echo=FALSE}
+# no3, temp
+scatterplot <- ggplot(ellerbee, aes(x=NO3, y=WaterTemp, color=WaterTemp)) + 
+               geom_jitter() + labs(title="2. Plot of Nitrogen vs. Temperature") + xlab("Nitrogen Content") + ylab("Water Temperature (Celcius)") + geom_smooth(method="lm", se=F)
+scatterplot
+```
+
+There does not seem to be much correlation between water temperature and nitrate content. The points are wild and all over the place. With that said nitrate can have effects on the water content, despite not affecting temperature. This will be examined in detail in later plots. With that said, observing relationships between uncorrelated variables can still be important. This can eliminate consideration of certain factors when concluding relationships. For example, it was just discovered that pH is positively correlated with temperature, however this relationship us usually inverse. If we were to identify nitrate as factoring into this correlation as a confounding variable, a more significant conclusion could be reached. 
+
+```{r, echo=FALSE}
+# no3, do
+scatterplot <- ggplot(ellerbee, aes(x=NO3, y=DO, color=DO)) + geom_jitter() + labs(title="3. Plot of Nitrogen vs. Dissolved Oxygen") + xlab("Nitrogen Content") + ylab("Dissolved Oxygen (mg/L)") + geom_smooth(method="lm", se=F)
+scatterplot
+```
+
+Dissolved oxygen is exactly what it sounds like; oxygen that has been dissolved into water. It is known that oxygen is fundamental to life, and as such, low levels of dissolved oxygen is indicative of poor quality water. In this case, it seems that dissolved oxygen increases as nitrate increases. This is important, as it indicates that the amount of nitrogen present in Ellerbee creek is safe. As mentioned in the introduction, too much nitrogen can cause algal bloom, which would end up depleting oxygen, however the graph does not indicate this. Again, dissolved oxygen is crucial when considering water quality, so it will be examined in detail in the following plots. 
+
+```{r, echo=FALSE}
+# temp, do
+scatterplot <- ggplot(ellerbee, aes(x=WaterTemp, y=DO, color=DO)) + 
+               geom_jitter() + labs(title="4. Plot of Water Temperature vs. Dissolved Oxygen") + xlab("Water Temperature (Celcius)") + ylab("Dissolved Oxygen (mg/L)") + geom_smooth(method="gam", se=T)
+scatterplot
+```
+
+Temperature is also crucial for life, as it often fluctuates quite a bit due to environmental changes. However, as discussed previously, dissolved oxygen content is. This graph shows quite a strong, negative correlation between water temperature and dissolved oxygen content. This is consistent with previous research—cold water can hold more dissolved oxygen than warm water. Due to how quickly the Ellerbee Creek seems to follow this correlation, it seems that it is healthy, at least in this regard. 
+
+```{r, echo=FALSE}
+# depth, do
+scatterplot <- ggplot(ellerbee, aes(x=StrDepth, y=DO, color=DO)) + 
+               geom_jitter() + labs(title="5. Plot of Stream Depth vs. Dissolved Oxygen Content") + xlab("Stream Depth (ft)") + ylab("Dissolved Oxygen (mg/L)") + geom_smooth(method="lm", se=F) + geom_hline(yintercept=4, color="#FF0000", linetype="dotdash") + geom_hline(yintercept=6.5, color="#FFA500", linetype="dotdash") + geom_hline(yintercept=8, color="#00FF00", linetype="dotdash") + geom_hline(yintercept=9.5, color="#00D1FF", linetype="dotdash")
+scatterplot
+```
+
+This plot further examines dissolved oxygen content. In this graph, a higher stream depth seems to be correlated with a higher content of dissolved oxygen. This result is quite interesting, and there is not quite a discernible reason why this occurs. Of course, with such a small data set, it could be attributed to not having enough data. In fact, in standing bodies of water, this is usually the inverse of what is expected. Regardless, there is little to indicate Ellerbee is particularly unhealthy in terms of dissolved oxygen. Dotted lines have been graphed to demonstrate this, 
+correlating to the dissolved oxygen standards listed below. All of the readings are at least "far", apart from the data artificially manipulated to be zero. 
+
+AA. Extraordinary: > 9.5 mg/L  
+A. Excellent: > 8.0 mg/L  
+B. Good: > 6.5 mg/L  
+C. Fair: > 4.0mg/L  
+
+
+```{r, echo=FALSE}
+# pressure, DO
+scatterplot <- ggplot(ellerbee, aes(x=Pressure, y=DO, color=DO)) + 
+               geom_jitter() + labs(title="6. Plot of Pressure vs. Dissolved Oxygen") + xlab("Pressure (mmHG)") + ylab("Dissolved Oxygen (mg/L)") + geom_smooth(method="loess", se=FALSE)
+scatterplot
+```
+
+This graphic demonstrates the correlation between pressure, measured in mmHG, and dissolved oxygen content. There is a clear relationship between pressure and dissolved oxygen. This is consistent with the general scientific sentiment. Water under higher pressure can hold more dissolved oxygen. Again, this further demonstrates the healthiness of the creek in terms of dissolved oxygen content, however this is not the only thing that should be considered. The final plots will examine turbidity in the creek, yet another indicator of water quality. 
+
+```{r, echo=FALSE, warning=FALSE}
+# no3, turb
+scatterplot <- ggplot(ellerbee, aes(x=NO3, y=Turb, color=Turb)) + 
+               geom_jitter() + labs(title="7. Plot of Nitrogen Content vs. Turbidity") + xlab("Nitrogen Content") + ylab("Turbidity (NTU)") + geom_smooth(method="gam", se=F)
+scatterplot
+```
+
+This graph demonstrates the relationship between nitrogen content and water turbidity. Turbidity is a very important factor in determining water quality. Turbidity is simply the degree to which a substance (in this case, water) is cloudy, or unclear. Obviously, water with low turbidity, such as drinking water, is more likely to be quality. In this case, the linear regression between nitrogen content and turbidity is amazingly nearly a straight line, indicating nearly zero correlation whatsoever between the two variables, which makes sense. Nitrogen is colorless. 
+
+```{r, echo=FALSE, warning=FALSE}
+# nh4, turb ?
+scatterplot <- ggplot(ellerbee, aes(x=NH4, y=Turb, color=Turb)) + 
+               geom_jitter() + labs(title="8. Plot of Ammonia Content vs. Turbidity") + xlab("Ammonia Content") + ylab("Turbidity (NTU)") + geom_smooth(method="loess", se=F) + xlim(c(0, 5))
+scatterplot
+```
+
+This graph similarly demonstrates the correlation between ammonia and turbidity. With ammonia, there is a very slight, however inconsistent correlation between its presence and turbidity. When ammonia is presence in water, it has a yellow tint, which could explain the turbidity level. To get a better understanding of what the turbidity value (in NTUs) represents, NTU standards are listen below. 
+
+1B. Drinking water: 10  
+2A. Cold water fishery; all recreation: 10  
+2B. Cool/warm water fishery, all recreation: 25  
+2C. Indigenous fish, most recreation: 25
+
+## 4. References
+
+1. https://www.newsobserver.com/news/local/community/durham-news/article10057493.html
+2. https://www.wqa.org/Portals/0/Technical/Technical%20Fact%20Sheets/2014_Ammonia.pdf
+3. https://www.wqa.org/Portals/0/Technical/Technical%20Fact%20Sheets/2014_NitrateNitrite.pdf
+4. https://www.usgs.gov/special-topic/water-science-school/science/dissolved-oxygen-and-water?qt-science_center_objects=0#qt-science_center_objects

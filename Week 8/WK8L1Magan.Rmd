@@ -6,11 +6,16 @@ abstract: hi
 output: pdf_document
 ---
 
+```{r, include=F}
+drugs <- read.csv("drugs.csv", header=TRUE, row.names=1)
+library(ggplot2)
+```
+
 ## Introduction
 
 ## Pharmacokinetics and Pharmacodynamics
 
-Within the field of pharmacology, there are two main studies: pharmacokinectics and pharmacodynamics. From a high level standpoint, pharmacokinectics is the study of how an organism affects a drug. It is studied alongside pharmodynamics (which will be discussed in-depth shortly) in order to determine a variety of descriptors, such as drug dosing in commercial settings. When a drug (or any substance) is consumed, highly specific metabolic reactions occur, digesting and transforming the consumed drug. This is accomplished via enzymes, which, again, are highly specific. For example: lactase is responsible for digesting lactose (milk sugar), cellulase is responsible for digesting cellulose (plant cell wall), etc. Of course, the exact way that this digestion (or "breaking down") process occurs varies from enzyme to enzyme, and therefore drug to drug as enzymes are specific to their substrates. Due to this very high specificity, drug selection and dosage must be carefully considered to achieve a desired effect. With that said, there are a few general steps that can be applied to better understand the digestion process, even if it is unique to different substances. These steps are characterized by the acronym ADME, or "absorption, distribution, metabolism, and excretion", and are explained in greater detail below. 
+Within the field of pharmacology, there are two main studies: pharmacokinectics and pharmacodynamics. From a high level standpoint, pharmacokinectics is the study of how an organism affects a drug. It is studied alongside pharmodynamics (which will be discussed in-depth shortly) in order to determine a variety of descriptors, such as drug dosing in commercial settings. When a drug (or any substance) is consumed, highly specific metabolic reactions occur, digesting and transforming the consumed drug. This is accomplished via enzymes, which, again, are highly specific. For example: lactase is responsible for digesting lactose (milk sugar), cellulase is responsible for digesting cellulose (plant cell wall), etc. Of course, the exact way that this digestion (or "breaking down") process occurs varies from enzyme to enzyme, and therefore drug to drug as enzymes are specific to their substrates. Due to this very high specificity, drug selection and dosage must be carefully considered to achieve a desired effect. With that said, there are a few general steps that can be applied to better understand the digestion process, even if it is unique to different substances. These steps are characterized by the acronym ADME, or absorption, distribution, metabolism, and excretion, and are explained in greater detail below. 
 
 ### Absorption
 
@@ -27,9 +32,34 @@ Metabolism describes all of the life-sustaining chemical reactions within the bo
 
 ### Excretion
 
-Lastly, excretion is the process by which metabolic waste is removed from an organism. In humans, this process occurs primarily in the kidney, the liver and gut, and the lungs. Excretion is a crucial process in the disposition of a drug. Without it, the accumulation of metabolic waste (carbon dioxide, water, salts, urea, uric acid, etc) could have an adverse effect on a variety of processes in the body. The kidney is the most important site in excretion, as it is where urine is processed. Fecal excretion is the process initiated in the liver, in which waste products are packaged along with feces. The lungs are involved in excretion through the release of harmful gases, such as anesthetic gases. 
+Lastly, excretion is the process by which metabolic waste is removed from an organism. In humans, this process occurs primarily in the kidney, the liver and gut, and the lungs. Excretion is a crucial process in the disposition of a drug. Without it, the accumulation of metabolic waste (carbon dioxide, water, salts, urea, uric acid, etc) could have an adverse effect on a variety of processes in the body. The kidney is the most important site in excretion, as it is where urine is processed. Fecal excretion is the process initiated in the liver, in which waste products are packaged along with feces. The lungs are involved in excretion through the release of harmful gases, such as anesthetic gases.  
 
-While pharmacokinetics describes the body's effect on a substance, pharmacodynamics describes a substance's effect on the body. 
+While pharmacokinetics describes the body's effect on a substance, pharmacodynamics describes a substance's effect on the body. Together, the two influence dosing, benefit, and side effects of specific drugs. With that said, there are a variety
+
+```{r}
+pca <- prcomp(drugs, scale=TRUE)
+summary(pca)
+names(pca)
+plot(pca$x[,1], pca$x[,2])
+screeplot(pca, main="Scree Plot")
+
+pca.variance <- pca$sdev^2
+pca.variance.per <- round(pca.variance / sum(pca.variance)*100, 1)
+barplot(pca.variance.per, main="Scree Plot", xlab="Principal Components", ylab="Percent Variable", ylim=c(0, 100), names.arg=pca.variance.per)
+
+pca.data <- data.frame(Sample=rownames(pca$x), X=pca$x[,1], Y=pca$x[,2])
+pca.data
+ggplot(data=pca.data, aes(x=X, y=Y, label=Sample)) + geom_text() + xlab(paste("PC1 - ", pca.variance.per[1], "%", sep="")) + ylab(paste("PC2 - ", pca.variance.per[2], "%", sep="")) + theme_bw() + ggtitle("My PCA Plot")
+
+loading_scores <- pca$rotation[,1]
+loading_scores
+drug_scores <- abs(loading_scores)
+drug_scores_ranked <- sort(drug_scores, decreasing=T)
+top10 <- names(drug_scores_ranked)
+top10
+
+biplot(pca)
+```
 
 ## Principle Component Analysis (PCA)
 

@@ -1,0 +1,40 @@
+---
+title: "PCA"
+author: "Hank Magan"
+date: "10/11/2021"
+abstract: hi
+output: pdf_document
+---
+
+## Introduction
+
+## Pharmacokinetics and Pharmacodynamics
+
+Within the field of pharmacology, there are two main studies: pharmacokinectics and pharmacodynamics. From a high level standpoint, pharmacokinectics is the study of how an organism affects a drug. It is studied alongside pharmodynamics (which will be discussed in-depth shortly) in order to determine a variety of descriptors, such as drug dosing in commercial settings. When a drug (or any substance) is consumed, highly specific metabolic reactions occur, digesting and transforming the consumed drug. This is accomplished via enzymes, which, again, are highly specific. For example: lactase is responsible for digesting lactose (milk sugar), cellulase is responsible for digesting cellulose (plant cell wall), etc. Of course, the exact way that this digestion (or "breaking down") process occurs varies from enzyme to enzyme, and therefore drug to drug as enzymes are specific to their substrates. Due to this very high specificity, drug selection and dosage must be carefully considered to achieve a desired effect. With that said, there are a few general steps that can be applied to better understand the digestion process, even if it is unique to different substances. These steps are characterized by the acronym ADME, or "absorption, distribution, metabolism, and excretion", and are explained in greater detail below. 
+
+### Absorption
+
+When a substance enters the body, it first engages in absorption, or the process that it takes to enter the bloodstream. Absorption often occurs via mucous surfaces, such as the digestive tract. Of course, certain drugs will not absorb well in the digestive tract, and might have a greater clinical effect when administered intravenously, intramuscularly, or through inhalation (among others). Naturally, absorption is critically involved in determining a substance's bioavailability, or the fraction of the substance that actually reaches the circulatory system. Bioavailability is another very important factor to consider when determining dosage, as not all of the administered substance will reach the intended organ(s). 
+
+### Distribution
+
+Once the drug enters the bloodstream, the process of distribution begins. Distribution simply describes the transfer of a drug from one location in the body to another. Distribution relies on a multitude of factors, including: vascular permeability, blood flow, and the perfusion rate of the tissue that the drug is intended to enter. The permeability of the tissue is particularly important. Some tissues, such as the blood-brain barrier (BBB), are naturally highly selective. This should be taken into consideration, as if a drug cannot exit the bloodstream and enter the desired tissues, problems may arise. Additionally, some drugs have the ability to bind with certain proteins founds in blood plasma, which can affect the drug's efficiency. Drugs that are less bound to plasma proteins can more efficiently traverse cell membranes. 
+
+
+### Metabolism
+
+Metabolism describes all of the life-sustaining chemical reactions within the body. These reactions are responsible for a variety of life processes, one of which is the biotransformation of drugs. As soon as a compound enters the body, deconstruction begins. With drugs, a majority of small-molecule metabolism occurs in the liver and is carried out by redox enzymes. When a compound is metabolizes, it does not simply break down and disappear—rather, it is converted into new, smaller compounds named metabolites. The metabolites that are produced via metabolism may or may not be pharmacologically active. When they are active, their effects should be considered and recognized as potential side effects to the drug in question (in some cases, the metabolites may be even more active than the parent drug). When they are not, their presence can dilute the effects of the parent drug, which should also be considered. 
+
+### Excretion
+
+Lastly, excretion is the process by which metabolic waste is removed from an organism. In humans, this process occurs primarily in the kidney, the liver and gut, and the lungs. Excretion is a crucial process in the disposition of a drug. Without it, the accumulation of metabolic waste (carbon dioxide, water, salts, urea, uric acid, etc) could have an adverse effect on a variety of processes in the body. The kidney is the most important site in excretion, as it is where urine is processed. Fecal excretion is the process initiated in the liver, in which waste products are packaged along with feces. The lungs are involved in excretion through the release of harmful gases, such as anesthetic gases. 
+
+While pharmacokinetics describes the body's effect on a substance, pharmacodynamics describes a substance's effect on the body. 
+
+## Principle Component Analysis (PCA)
+
+## Methods
+
+## Results 
+
+## Conclusion

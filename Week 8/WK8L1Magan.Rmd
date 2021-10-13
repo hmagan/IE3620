@@ -1,8 +1,8 @@
 ---
-title: "PCA"
+title: "Investigating Commerical Success in Drugs Through Principal Component Analysis"
 author: "Hank Magan"
-date: "10/11/2021"
-abstract: hi
+date: "10/12/2021"
+abstract: Certain drugs experience widespread, commerical success, despite treating a variety of different ailments. The fact that certain drugs outperform others on the market is uncoincidental. As demonstrated in this report, certain molecular properties, such as topological polar surface area (TPSA), the presence of hydrogen bond donors (HBD), and the presence of hydrogen bond acceptors (HBA), influence the commerical success of a drug. Results are calculated using principal component analysis, or PCA. The dataset used contains data about 1,270 different commerically-successful drugs, with 14 different descriptors for each drug. It is through PCA that all of these descriptors can be observed and modeled at once; this process is known as dimension reduction. In the culmination of the report, it is concluded that the traits found to be influential in commerical success are directly correlated to ADME (the disposition of drugs within the body) as well as Lipinski's rule of five. 
 output: pdf_document
 ---
 
@@ -11,60 +11,146 @@ drugs <- read.csv("drugs.csv", header=TRUE, row.names=1)
 library(ggplot2)
 ```
 
-## Introduction
+# Introduction
 
 ## Pharmacokinetics and Pharmacodynamics
 
 Within the field of pharmacology, there are two main studies: pharmacokinectics and pharmacodynamics. From a high level standpoint, pharmacokinectics is the study of how an organism affects a drug. It is studied alongside pharmodynamics (which will be discussed in-depth shortly) in order to determine a variety of descriptors, such as drug dosing in commercial settings. When a drug (or any substance) is consumed, highly specific metabolic reactions occur, digesting and transforming the consumed drug. This is accomplished via enzymes, which, again, are highly specific. For example: lactase is responsible for digesting lactose (milk sugar), cellulase is responsible for digesting cellulose (plant cell wall), etc. Of course, the exact way that this digestion (or "breaking down") process occurs varies from enzyme to enzyme, and therefore drug to drug as enzymes are specific to their substrates. Due to this very high specificity, drug selection and dosage must be carefully considered to achieve a desired effect. With that said, there are a few general steps that can be applied to better understand the digestion process, even if it is unique to different substances. These steps are characterized by the acronym ADME, or absorption, distribution, metabolism, and excretion, and are explained in greater detail below. 
 
-### Absorption
+#### Absorption
 
 When a substance enters the body, it first engages in absorption, or the process that it takes to enter the bloodstream. Absorption often occurs via mucous surfaces, such as the digestive tract. Of course, certain drugs will not absorb well in the digestive tract, and might have a greater clinical effect when administered intravenously, intramuscularly, or through inhalation (among others). Naturally, absorption is critically involved in determining a substance's bioavailability, or the fraction of the substance that actually reaches the circulatory system. Bioavailability is another very important factor to consider when determining dosage, as not all of the administered substance will reach the intended organ(s). 
 
-### Distribution
+#### Distribution
 
 Once the drug enters the bloodstream, the process of distribution begins. Distribution simply describes the transfer of a drug from one location in the body to another. Distribution relies on a multitude of factors, including: vascular permeability, blood flow, and the perfusion rate of the tissue that the drug is intended to enter. The permeability of the tissue is particularly important. Some tissues, such as the blood-brain barrier (BBB), are naturally highly selective. This should be taken into consideration, as if a drug cannot exit the bloodstream and enter the desired tissues, problems may arise. Additionally, some drugs have the ability to bind with certain proteins founds in blood plasma, which can affect the drug's efficiency. Drugs that are less bound to plasma proteins can more efficiently traverse cell membranes. 
 
 
-### Metabolism
+#### Metabolism
 
 Metabolism describes all of the life-sustaining chemical reactions within the body. These reactions are responsible for a variety of life processes, one of which is the biotransformation of drugs. As soon as a compound enters the body, deconstruction begins. With drugs, a majority of small-molecule metabolism occurs in the liver and is carried out by redox enzymes. When a compound is metabolizes, it does not simply break down and disappear—rather, it is converted into new, smaller compounds named metabolites. The metabolites that are produced via metabolism may or may not be pharmacologically active. When they are active, their effects should be considered and recognized as potential side effects to the drug in question (in some cases, the metabolites may be even more active than the parent drug). When they are not, their presence can dilute the effects of the parent drug, which should also be considered. 
 
-### Excretion
+#### Excretion
 
 Lastly, excretion is the process by which metabolic waste is removed from an organism. In humans, this process occurs primarily in the kidney, the liver and gut, and the lungs. Excretion is a crucial process in the disposition of a drug. Without it, the accumulation of metabolic waste (carbon dioxide, water, salts, urea, uric acid, etc) could have an adverse effect on a variety of processes in the body. The kidney is the most important site in excretion, as it is where urine is processed. Fecal excretion is the process initiated in the liver, in which waste products are packaged along with feces. The lungs are involved in excretion through the release of harmful gases, such as anesthetic gases.  
 
-While pharmacokinetics describes the body's effect on a substance, pharmacodynamics describes a substance's effect on the body. Together, the two influence dosing, benefit, and side effects of specific drugs. With that said, there are a variety
+While pharmacokinetics describes the body's effect on a substance, pharmacodynamics describes a substance's effect on the body. Together, the two influence dosing, benefit, and side effects of specific drugs. The drugs analyzed in this report have already been recognized as commercially successful drugs, and therefore will be examined to determine what factor has the most influence on commercial success in a drug. This is not a foreign concept; in fact, Christopher A. Lipinski developed a set of rules dubbed "Lipinski's rule of five" to determine if a drug is likely to be orally active or not. This rule describes a set of molecular properties which are important to the processes of ADME. The rule is as follows; in general, an orally active drug has no more than one violation of the following: 
+
+* No more than 5 hydrogen bond donors (the total number of nitrogen–hydrogen and oxygen–hydrogen bonds)
+* No more than 10 hydrogen bond acceptors (all nitrogen or oxygen atoms)
+* A molecular mass less than 500 daltons
+* An octanol-water partition coefficient (log P) that does not exceed 5
+
+The rule mentions a few properties of molecules (such as logP, hydrogen bond acceptors [HBA; nitrogen and oxygen atoms], and hydrogen bond donors [HBD; nitrogen–hydrogen and oxygen–hydrogen bonds]) which are contained in this data set, however there are a couple more that are left out. For instance, logS describes the solubility of a substance. As one might guess, logSpH7 describes the solubility of a substance at a pH of 7. Solubility can be important in the process of absorption and distribution. Additionally, the data contains a variable called TPSA, or topological polar surface area. TPSA is the surface sum of all polar atoms within a substance; these polar atoms are primarily oxygen and nitrogen (which just so happen to be the atoms in HBA...). TPSA is also a crucial value when considering penetration of the blood-brain barrier (BBB, also measured in this dataset). Rotatable bonds are bonds which allow for free rotation around themselves; more formally, they are single, non-ring bonds, attached to non-terminal, non-hydrogen atoms. Other variables exist in this dataset (there are 14 descriptors total), however these appear to be the most relevant. The definitions of these variables will become quite important when examining results.
+
+## Principal Component Analysis (PCA)
+
+Formally, Principal component analysis, or PCA is a technique used for making predictive models in which principal components are computed and then used to observe data variance, sometimes using only the first few principal components and ignoring the rest. Variance is a highly important concept in statistics as a whole, as well as in the context of this specific lab. Simply put, variance describes the amount of deviation in a dataset from its mean. Generally, a low variation is preferred, as this means that the data in question is highly predictable. Variation can be roughly identified visually; data with low variation will be highly clustered around a point, while data with high variation will be spread out widely. 
+
+A common use of PCA is dimension reduction, or any process which reduces a dataset composed of three or more variables into (usually) two variables so that the dataset may be properly modeled and analyzed. This is vital, as it allows one to compose graphics of data that is otherwise impossible to visualize. It accomplishes this by projecting the data onto new variables called PCs, or principal components. PC1 refers the principal component which minimizes the distance between the data and the projection. As the number following PC increases, the distance increases. As such, the first few PCs are usually the most statistically significant and represent the greatest amount of variance. 
+
+PCA is how the variable which contributes most to the success of the drugs will be identified. All 14 variables can be analyzed accurately using this method. 
+
+# Methods
+
+The analysis was conducted using R, along with the ggplot2 software library for some of the visualizations. Much of the basic data handling was done using default R commands, such as `summary` and `names`. A majority of the evaluation was completed using PCA. More specifically, single value decomposition (SVD) was composed using the `prcomp` command rather than an eigenfunction using the `princomp` command. This produced a total of 14 PCs; of these 14, the first 2 were examined graphically using a pairwise and a scree plot. The variables were then ranked based on relative influence on commercial success. Lastly, the PCA data was graphed using a biplot to further observe variance and column influence. 
+
+# Results
+
+It is always a good idea to perform a small, preliminary analysis of the data before performing the full analysis. This ensures a holistic view of the dataset. 
+
+```{r, echo=F}
+str(drugs)
+summary(drugs)
+```
+
+This provides a decent quick view of the data via descriptive statistics, however it does not provide data that is incredibly significant. Luckily, the data itself is already clean, so PCA can commence as discussed. The `prcomp` command was used to generate the PCA data insteadof the `princomp` command. The best way to find out the best one for the scenario is to simply try both and observe the results. In this case, the SVD-based `prcomp` (with scaling enabled) provided the best results.
 
 ```{r}
 pca <- prcomp(drugs, scale=TRUE)
 summary(pca)
-names(pca)
-plot(pca$x[,1], pca$x[,2])
-screeplot(pca, main="Scree Plot")
+```
 
+By taking the summary of this data, the PCs can be observed, as displayed above. This displays, most notably, the proportion of variance represented by each PC. Through this, it can be seen that the first two PCs represent 69.5% of the variance in the dataset. Now that the PCs have been gathered, they can be analyzed using a variety of graphs. The following is a so-called screeplot, which visualizes the variance in each of the PCs. Notice the exponential decay across the variances. 
+
+```{r, echo=F}
 pca.variance <- pca$sdev^2
 pca.variance.per <- round(pca.variance / sum(pca.variance)*100, 1)
-barplot(pca.variance.per, main="Scree Plot", xlab="Principal Components", ylab="Percent Variable", ylim=c(0, 100), names.arg=pca.variance.per)
+barplot(pca.variance.per, main="Scree Plot of PCs vs Variance", xlab="Principal Components", ylab="Variance", ylim=c(0, 100), names.arg=pca.variance.per)
+```
 
+As one can see, the largest concentration of variance occurs in the first PC; then the second, and then the third, and so on. Also notice the sharp decline in variance among PCs. Additionally, the data can be modeled by creating a pairwise plot between the two most concentrated principal components, PC1 and PC2. The purpose of this is to both further understanding of the data's variance, as well as to identify any possible clusters of data. 
+
+```{r}
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", main="PC1 vs. PC2")
+```
+
+With this plot, it is difficult to identify clusters, as most of the data is grouped together. With that said, there are a few notable outliers running from the bottom left of the graph to the top right. As for variance, most of it seems to be around the clump in the top right, mostly running diagonally. 
+
+```{r, echo=F}
 pca.data <- data.frame(Sample=rownames(pca$x), X=pca$x[,1], Y=pca$x[,2])
-pca.data
-ggplot(data=pca.data, aes(x=X, y=Y, label=Sample)) + geom_text() + xlab(paste("PC1 - ", pca.variance.per[1], "%", sep="")) + ylab(paste("PC2 - ", pca.variance.per[2], "%", sep="")) + theme_bw() + ggtitle("My PCA Plot")
+ggplot(data=pca.data, aes(x=X, y=Y, label=Sample)) + geom_text() + xlab(paste("PC1 - ", pca.variance.per[1], "%", sep="")) + ylab(paste("PC2 - ", pca.variance.per[2], "%", sep="")) + theme_bw() + ggtitle("PC1 vs. PC2")
+```
 
+This graphic is perhaps a little more useful. In this one, specific drug names can be seen, however that clump is still near impossible to read due to the concentration of data. Regardless, it demonstrates variance. To provide the most direct answer to the question using the data, loading scores can be used to find relative influence of each variable on the PC data. By sorting this data, the rank of each variable in the dataset can be observed, and the most influential variables can be identified. 
+
+```{r, results='hide'}
 loading_scores <- pca$rotation[,1]
-loading_scores
 drug_scores <- abs(loading_scores)
 drug_scores_ranked <- sort(drug_scores, decreasing=T)
-top10 <- names(drug_scores_ranked)
-top10
+names(drug_scores_ranked)
+```
 
+1. TPSA
+
+2. HBD
+
+3. HBA
+
+4. RotatableBonds
+
+5. MW
+
+6. hERGpIC50
+
+7. logSpH7
+
+8. logP
+
+9. BBB
+
+10. Flexibility
+
+11. logS
+
+12. Pgpcategory
+
+13. logD
+
+14. X2C9pKi
+
+Interestingly, the three most influential variables in the commercial success of these drugs are TPSA, HBD, and HBA. The implications of this will be discussed in further detail in the conclusion. Lastly, a biplot may be constructed to further observe the relationship between the principal components, individual drugs, and data columns, as shown below. 
+
+```{r, echo=F}
 biplot(pca)
 ```
 
-## Principle Component Analysis (PCA)
+# Conclusion
 
-## Methods
+In conclusion, out of the 14 descriptors, the 3 most influential variables are TPSA, HBD, and HBA. 
 
-## Results 
+TPSA, or topological polar surface area, is commonly used as a metric for the optimization of a drug's ability to permeate cells (as polar molecules are hydrophilic). As the results indicate, this descriptor is quite fitting. This has direct parallels to ADME, specifically distribution. Increased polar surface area encourages permeation in cells, increasing the amount of the drug that actual enters the desired tissue. As for HBD and HBA (hydrogen bond acceptors and donors) these metrics are directly involved in Lipinski's rule of five. This further confirms the results. Moreover, TPSA is calculated using HBD and HBA atoms. All in all, these conclusions seem to support each other, which collectively support the conclusion that these metrics in particular contribute the most to commerical success in drugs. 
 
-## Conclusion
+## References
+
+1. https://en.wikipedia.org/wiki/ADME
+
+2. https://en.wikipedia.org/wiki/PK/PD_models
+
+3. https://en.wikipedia.org/wiki/Lipinski%27s_rule_of_five
+
+4. https://en.wikipedia.org/wiki/Principal_component_analysis
+
+5. https://en.wikipedia.org/wiki/Polar_surface_area 
+
+

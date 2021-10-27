@@ -53,3 +53,4 @@ stripchart <- ggplot(opiates, aes(x=adjusted, y=adjusted_se, shape=region, color
 
 # arrange all four plots onto one document (2x2)
 grid.arrange(boxplot, scatterplot, violin, stripchart, ncol=2, nrow=2)
+
